@@ -1,6 +1,7 @@
 package run.halo.photos.finders.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -123,6 +124,10 @@ public class PhotoFInderImpl implements PhotoFinder {
             // 处理指定分组的情况
             return client.fetch(PhotoGroup.class, group)
                 .flatMap(photoGroup -> {
+                    if (photoGroup.getSpec().isHidden()) {
+                        List<PhotoVo> emptyList = new ArrayList<>();
+                        return Mono.just(new ListResult<>(finalPage, finalSize, 0L, emptyList));
+                    }
                     String attachmentGroup = photoGroup.getSpec().getAttachmentGroup();
                     if (StringUtils.isNotEmpty(attachmentGroup)) {
                         // 查询附件分组数据
@@ -175,7 +180,8 @@ public class PhotoFInderImpl implements PhotoFinder {
 
     @Override
     public Flux<PhotoGroupVo> groupBy() {
-        return this.client.list(PhotoGroup.class, null, defaultGroupComparator())
+        Predicate<PhotoGroup> predicate = photoGroup -> !photoGroup.getSpec().isHidden();
+        return this.client.list(PhotoGroup.class, predicate, defaultGroupComparator())
             .concatMap(group -> {
                 PhotoGroupVo.PhotoGroupVoBuilder builder = PhotoGroupVo.from(group);
                 return this.listBy(group.getMetadata().getName()).collectList().map(photos -> {

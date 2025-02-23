@@ -28,6 +28,10 @@ public class PhotoGroup extends AbstractExtension {
         private String displayName;
 
         private Integer priority;
+
+        private boolean hidden;
+
+        private String attachmentGroup;
     }
 
     @JsonIgnore

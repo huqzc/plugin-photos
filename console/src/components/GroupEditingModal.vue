@@ -5,7 +5,7 @@ import { axiosInstance } from "@halo-dev/api-client";
 import { VButton, VModal, VSpace } from "@halo-dev/components";
 import { useMagicKeys } from "@vueuse/core";
 import { cloneDeep } from "lodash-es";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -33,6 +33,8 @@ const initialFormState: PhotoGroup = {
   spec: {
     displayName: "",
     priority: 0,
+    hidden: true,
+    attachmentGroup: ''
   },
   status: {
     photoCount: 0,
@@ -116,6 +118,22 @@ watch(Meta_Enter, (v) => {
     submitForm("photo-group-form");
   }
 });
+
+const attachmentGroup = ref([]);
+const fetchAttachmentGroup = async () => {
+  try {
+    const { data } = await axiosInstance.get("/apis/storage.halo.run/v1alpha1/groups?labelSelector=!halo.run/hidden&sort=metadata.creationTimestamp,asc");
+    attachmentGroup.value = data.items.map((item) => ({
+      label: item.spec.displayName,
+      value: item.metadata.name,
+    }));
+  } catch (e) {
+  }
+};
+
+onMounted(() => {
+  fetchAttachmentGroup();
+})
 </script>
 <template>
   <VModal :visible="visible" :width="600" :title="modalTitle" @update:visible="onVisibleChange">
@@ -141,6 +159,21 @@ watch(Meta_Enter, (v) => {
             type="text"
             validation="required"
             help="可根据此名称查询图片"
+          ></FormKit>
+          <FormKit
+            name="attachmentGroup"
+            label="附件组别"
+            type="select"
+            help="关联到附件列表"
+            placeholder="可关联附件库"
+            :options="attachmentGroup"
+          ></FormKit>
+          <FormKit
+            name="hidden"
+            label="是否隐藏"
+            type="checkbox"
+            validation="required"
+            help="是否隐藏，不在前台显示"
           ></FormKit>
         </div>
       </div>

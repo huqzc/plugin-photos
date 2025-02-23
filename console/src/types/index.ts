@@ -15,6 +15,8 @@ export interface Metadata {
 export interface PhotoGroupSpec {
   displayName: string;
   priority?: number;
+  hidden?: boolean;
+  attachmentGroup?: string;
 }
 
 export interface PostGroupStatus {

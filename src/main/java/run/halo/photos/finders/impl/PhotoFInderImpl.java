@@ -89,8 +89,9 @@ public class PhotoFInderImpl implements PhotoFinder {
                     .map(g -> g.getMetadata().getName()).collect(Collectors.toSet());
 
                 // 查询附件数据
+                Comparator<Attachment> attComparator = Comparator.comparing(att -> att.getMetadata().getCreationTimestamp());
                 Mono<ListResult<Attachment>> attachmentQuery = client.list(Attachment.class,
-                    att -> attachmentGroups.contains(att.getSpec().getGroupName()), null,
+                    att -> attachmentGroups.contains(att.getSpec().getGroupName()), attComparator,
                     finalPage, finalSize);
 
                 // 构建新的图片查询条件
